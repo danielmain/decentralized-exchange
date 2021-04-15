@@ -152,53 +152,12 @@ describe('Dex', function () {
         await truffleAssert.reverts(
             dex.createLimitOrder(Side.SELL, Tokens.LINK, 100, 100)
         );
-        await link.approve(dex.address, 100);
-        await dex.deposit(10, Tokens.LINK);
+        await link.approve(dex.address, 100, { from: accounts[0] });
+        await dex.deposit(10, Tokens.LINK, { from: accounts[0] });
         truffleAssert.passes(
-            await dex.createLimitOrder(Side.SELL, Tokens.LINK, 99, 51)
+            await dex.createLimitOrder(Side.SELL, Tokens.LINK, 2, 51, { from: accounts[0] })
         );
 
-    });
-
-    xit("The BUY order book should be sorted by highest to lowest ascending", async () => {
-        await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
-        await link.approve(dex.address, 100);
-
-        await _.reduce(
-            [
-                { side: Side.BUY, token: Tokens.LINK, amount: 120, price: 40 },
-                { side: Side.BUY, token: Tokens.LINK, amount: 129, price: 39 },
-                { side: Side.BUY, token: Tokens.LINK, amount: 130, price: 30 },
-                { side: Side.BUY, token: Tokens.LINK, amount: 140, price: 20 },
-            ],
-            async (_, order) => dex.createLimitOrder(order.side, order.token, order.amount, order.price),
-            Promise.resolve()
-        );
-
-        const orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-
-        const result = _.find(orderbook, (value, index, array) => index !== 0 && array[index - 1].price <= value.price);
-        expect(result).toBeFalsy();
-    });
-
-    xit("The SELL order book should be sorted by lowest to highest ascending", async () => {
-        await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
-        await link.approve(dex.address, 1000);
-        await dex.deposit(99, Tokens.LINK);
-        await _.reduce(
-            [
-                { side: Side.SELL, token: Tokens.LINK, amount: 12, price: 10 },
-                { side: Side.SELL, token: Tokens.LINK, amount: 19, price: 19 },
-                { side: Side.SELL, token: Tokens.LINK, amount: 13, price: 20 },
-                { side: Side.SELL, token: Tokens.LINK, amount: 14, price: 30 },
-            ],
-            async (_, order) => dex.createLimitOrder(order.side, order.token, order.amount, order.price),
-            Promise.resolve()
-        );
-
-        const orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
-        const result = _.find(orderbook, (value, index, array) => index !== 0 && array[index - 1].price >= value.price);
-        expect(result).toBeFalsy();
     });
 });
 
