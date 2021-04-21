@@ -48,6 +48,26 @@ module.exports = {
      network_id: "*",       // Any network (default: none)
     },
 
+    // development: {
+    //   host: "127.0.0.1",
+    //   port: 8545,
+    //   network_id: "*", // match any network
+    //   websockets: true
+    // },
+
+    // development: {
+    //   provider: function() {
+    //     return new HDWalletProvider(mnemonic, "http://127.0.0.1:8545/");
+    //   },
+    //   network_id: '*',
+    // },
+
+    // test: {
+    //   provider: function() {
+    //     return new HDWalletProvider(mnemonic, "http://127.0.0.1:8545/");
+    //   },
+    //   network_id: '*',
+    // },
     // Another network with more advanced options...
     // advanced: {
       // port: 8777,             // Custom port

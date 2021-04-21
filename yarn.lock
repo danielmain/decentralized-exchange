@@ -696,7 +696,7 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
-"@openzeppelin/contract-loader@^0.6.1":
+"@openzeppelin/contract-loader@^0.6.1", "@openzeppelin/contract-loader@^0.6.2":
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contract-loader/-/contract-loader-0.6.2.tgz#f0c08f14d5dfeaeb44952ba777ec9ce1c9ff9759"
   integrity sha512-/P8v8ZFVwK+Z7rHQH2N3hqzEmTzLFjhMtvNK4FeIak6DEeONZ92vdFaFb10CCCQtp390Rp/Y57Rtfrm50bUdMQ==
@@ -727,6 +727,22 @@
     semver "^7.1.3"
     try-require "^1.2.1"
     web3 "^1.3.0"
+
+"@openzeppelin/test-helpers@^0.5.10":
+  version "0.5.10"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/test-helpers/-/test-helpers-0.5.10.tgz#0a6ab9fd0810085e8114f9f33aed4102e848f27f"
+  integrity sha512-agXr5Rn/q0MCDaU0ioYMGQVjY32Ln3Ae3cyQKtESuKdDoEZ7g3Y7x4eUbT779OE9nQ+xQCytmVqjKvZvajURug==
+  dependencies:
+    "@openzeppelin/contract-loader" "^0.6.2"
+    "@truffle/contract" "^4.0.35"
+    ansi-colors "^3.2.3"
+    chai "^4.2.0"
+    chai-bn "^0.2.1"
+    ethjs-abi "^0.2.1"
+    lodash.flatten "^4.4.0"
+    semver "^5.6.0"
+    web3 "^1.2.5"
+    web3-utils "^1.2.5"
 
 "@redux-saga/core@^1.0.0":
   version "1.1.3"
@@ -980,7 +996,7 @@
     debug "^4.3.1"
     glob "^7.1.6"
 
-"@truffle/contract@^4.0.38", "@truffle/contract@^4.3.5":
+"@truffle/contract@^4.0.35", "@truffle/contract@^4.0.38", "@truffle/contract@^4.3.5":
   version "4.3.13"
   resolved "https://registry.yarnpkg.com/@truffle/contract/-/contract-4.3.13.tgz#72e84bb5398a2bec0f28f9bc1cba7a8c8bff461a"
   integrity sha512-fj9XQUveNIDCQWwAoLwGLa0owfWlm5Sk8nF/PLXTG0Z6TwWa3D4itBiec8zEnZZIxS6yjDVBUpzBSMCvH7wh2A==
@@ -1477,6 +1493,11 @@ ansi-colors@^1.0.1:
   integrity sha512-SFKX67auSNoVR38N3L+nvsPjOE0bybKTYbkf5tRvushrAPQ9V75huw0ZxBkKVeRU9kqH3d6HA4xTckbwZ4ixmA==
   dependencies:
     ansi-wrap "^0.1.0"
+
+ansi-colors@^3.2.3:
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/ansi-colors/-/ansi-colors-3.2.4.tgz#e3a3da4bfbae6c86a9c285625de124a234026fbf"
+  integrity sha512-hHUXGagefjN2iRrID63xckIvotOXOojhQKWIPUZ4mNUZ9nLZW+7FMNoE1lOkEhNWYsx/7ysGIuJYCiMAA9FnrA==
 
 ansi-escapes@^3.2.0:
   version "3.2.0"
@@ -3041,6 +3062,11 @@ cbor@^5.1.0:
     bignumber.js "^9.0.1"
     nofilter "^1.0.4"
 
+chai-bn@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/chai-bn/-/chai-bn-0.2.1.tgz#1dad95e24c3afcd8139ab0262e9bbefff8a30ab7"
+  integrity sha512-01jt2gSXAw7UYFPT5K8d7HYjdXj2vyeIuE+0T/34FWzlNcVbs1JkPxRu7rYMfQnJhrHT8Nr6qjSf5ZwwLU2EYg==
+
 chai@4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/chai/-/chai-4.2.0.tgz#760aa72cf20e3795e84b12877ce0e83737aa29e5"
@@ -3051,6 +3077,18 @@ chai@4.2.0:
     deep-eql "^3.0.1"
     get-func-name "^2.0.0"
     pathval "^1.1.0"
+    type-detect "^4.0.5"
+
+chai@^4.2.0:
+  version "4.3.4"
+  resolved "https://registry.yarnpkg.com/chai/-/chai-4.3.4.tgz#b55e655b31e1eac7099be4c08c21964fce2e6c49"
+  integrity sha512-yS5H68VYOCtN1cjfwumDSuzn/9c+yza4f3reKXlE5rUg7SFcCEy90gJvydNgOYtblyf4Zi6jIWRnXOgErta0KA==
+  dependencies:
+    assertion-error "^1.1.0"
+    check-error "^1.0.2"
+    deep-eql "^3.0.1"
+    get-func-name "^2.0.0"
+    pathval "^1.1.1"
     type-detect "^4.0.5"
 
 chalk@1.1.3, chalk@^1.1.3:
@@ -5245,6 +5283,15 @@ ethers@^4.0.0-beta.1, ethers@^4.0.27, ethers@^4.0.32:
     uuid "2.0.1"
     xmlhttprequest "1.8.0"
 
+ethjs-abi@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/ethjs-abi/-/ethjs-abi-0.2.1.tgz#e0a7a93a7e81163a94477bad56ede524ab6de533"
+  integrity sha1-4KepOn6BFjqUR3utVu3lJKtt5TM=
+  dependencies:
+    bn.js "4.11.6"
+    js-sha3 "0.5.5"
+    number-to-bn "1.7.0"
+
 ethjs-unit@0.1.6, ethjs-unit@^0.1.6:
   version "0.1.6"
   resolved "https://registry.yarnpkg.com/ethjs-unit/-/ethjs-unit-0.1.6.tgz#c665921e476e87bce2a9d588a6fe0405b2c41699"
@@ -5822,6 +5869,11 @@ flush-write-stream@^1.0.2:
     inherits "^2.0.3"
     readable-stream "^2.3.6"
 
+follow-redirects@^1.12.1:
+  version "1.13.3"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.3.tgz#e5598ad50174c1bc4e872301e82ac2cd97f90267"
+  integrity sha512-DUgl6+HDzB0iEptNQEXLx/KhTmDb8tZUHSeLqpnjpknR70H0nC2t9N73BK6fN4hOvJ84pKlIQVQ4k5FFlBedKA==
+
 for-each@^0.3.3, for-each@~0.3.3:
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/for-each/-/for-each-0.3.3.tgz#69b447e88a0a5d32c3e7084f3f1710034b21376e"
@@ -6021,6 +6073,15 @@ functional-red-black-tree@^1.0.1, functional-red-black-tree@~1.0.1:
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
+ganache-cli@^6.12.2:
+  version "6.12.2"
+  resolved "https://registry.yarnpkg.com/ganache-cli/-/ganache-cli-6.12.2.tgz#c0920f7db0d4ac062ffe2375cb004089806f627a"
+  integrity sha512-bnmwnJDBDsOWBUP8E/BExWf85TsdDEFelQSzihSJm9VChVO1SHp94YXLP5BlA4j/OTxp0wR4R1Tje9OHOuAJVw==
+  dependencies:
+    ethereumjs-util "6.2.1"
+    source-map-support "0.5.12"
+    yargs "13.2.4"
+
 ganache-core@2.7.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/ganache-core/-/ganache-core-2.7.0.tgz#9897c7ad6ebe934e92f88e62fcf3c6cc1f1a807f"
@@ -6090,6 +6151,11 @@ ganache-core@^2.11.2:
   optionalDependencies:
     ethereumjs-wallet "0.6.5"
     web3 "1.2.11"
+
+ganache@^6.4.4:
+  version "6.4.4"
+  resolved "https://registry.yarnpkg.com/ganache/-/ganache-6.4.4.tgz#efb3eb5157b8987e5213584f24090322827c3521"
+  integrity sha512-uBCxKuyj1SSjz/iONMk1ZiHr1wf0bPG5E+qSO2lxyDq+dtZ5d/VvW6iKtg9bWikhG8hd1jU7kRkoS5f4q7FrWQ==
 
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
@@ -8145,6 +8211,11 @@ js-queue@2.0.2:
   dependencies:
     easy-stack "^1.0.1"
 
+js-sha3@0.5.5:
+  version "0.5.5"
+  resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.5.5.tgz#baf0c0e8c54ad5903447df96ade7a4a1bca79a4a"
+  integrity sha1-uvDA6MVK1ZA0R9+Wreekobynmko=
+
 js-sha3@0.5.7, js-sha3@^0.5.7:
   version "0.5.7"
   resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.5.7.tgz#0d4ffd8002d5333aabaf4a23eed2f6374c9f28e7"
@@ -8818,6 +8889,11 @@ lodash.escaperegexp@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/lodash.escaperegexp/-/lodash.escaperegexp-4.1.2.tgz#64762c48618082518ac3df4ccf5d5886dae20347"
   integrity sha1-ZHYsSGGAglGKw99Mz11YhtriA0c=
+
+lodash.flatten@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/lodash.flatten/-/lodash.flatten-4.4.0.tgz#f31c22225a9632d2bbf8e4addbef240aa765a61f"
+  integrity sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=
 
 lodash.isequal@^4.0.0, lodash.isequal@^4.5.0:
   version "4.5.0"
@@ -10323,7 +10399,7 @@ path-type@^2.0.0:
   dependencies:
     pify "^2.0.0"
 
-pathval@^1.1.0:
+pathval@^1.1.0, pathval@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.1.tgz#8534e77a77ce7ac5a2512ea21e0fdb8fcf6c3d8d"
   integrity sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==
@@ -11794,6 +11870,21 @@ solc@^0.6.0:
   dependencies:
     command-exists "^1.2.8"
     commander "3.0.2"
+    fs-extra "^0.30.0"
+    js-sha3 "0.8.0"
+    memorystream "^0.3.1"
+    require-from-string "^2.0.0"
+    semver "^5.5.0"
+    tmp "0.0.33"
+
+solc@^0.8.3:
+  version "0.8.3"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.8.3.tgz#896fdca2f0c4ccf18ff7a99f8183a5a1a8f6345c"
+  integrity sha512-VZvSHtwe2zAsoviClIpWjvrg22bIZ0pLtzFrYD9BtPfR7mhMZYwpptnzRizNaSvMngTR+gB9Ul8IyL5xaC7+jw==
+  dependencies:
+    command-exists "^1.2.8"
+    commander "3.0.2"
+    follow-redirects "^1.12.1"
     fs-extra "^0.30.0"
     js-sha3 "0.8.0"
     memorystream "^0.3.1"
@@ -14274,7 +14365,7 @@ web3-utils@1.2.9:
     underscore "1.9.1"
     utf8 "3.0.0"
 
-web3-utils@1.3.5, web3-utils@^1.3.5:
+web3-utils@1.3.5, web3-utils@^1.2.5, web3-utils@^1.3.5:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/web3-utils/-/web3-utils-1.3.5.tgz#14ee2ff1a7a226867698d6eaffd21aa97aed422e"
   integrity sha512-5apMRm8ElYjI/92GHqijmaLC+s+d5lgjpjHft+rJSs/dsnX8I8tQreqev0dmU+wzU+2EEe4Sx9a/OwGWHhQv3A==
@@ -14314,7 +14405,7 @@ web3@1.2.11:
     web3-shh "1.2.11"
     web3-utils "1.2.11"
 
-web3@1.3.5, web3@^1.0.0-beta.34, web3@^1.0.0-beta.35, web3@^1.3.0:
+web3@1.3.5, web3@^1.0.0-beta.34, web3@^1.0.0-beta.35, web3@^1.2.5, web3@^1.3.0:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/web3/-/web3-1.3.5.tgz#ef4c3a2241fdd74f2f7794e839f30bc6f9814e46"
   integrity sha512-UyQW/MT5EIGBrXPCh/FDIaD7RtJTn5/rJUNw2FOglp0qoXnCQHNKvntiR1ylztk05fYxIF6UgsC76IrazlKJjw==
@@ -14733,7 +14824,7 @@ yallist@^4.0.0:
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-4.0.0.tgz#9bb92790d9c0effec63be73519e11a35019a3a72"
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
-yargs-parser@13.1.2, yargs-parser@^13.1.2:
+yargs-parser@13.1.2, yargs-parser@^13.1.0, yargs-parser@^13.1.2:
   version "13.1.2"
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-13.1.2.tgz#130f09702ebaeef2650d54ce6e3e5706f7a4fb38"
   integrity sha512-3lbsNRf/j+A4QuSZfDRA7HRSfWrzO0YjqTJd5kjAq37Zep1CEgaYmrH9Q3GwPiB9cHyd1Y1UwggGhJGoxipbzg==
@@ -14787,6 +14878,23 @@ yargs-unparser@1.6.0:
     flat "^4.1.0"
     lodash "^4.17.15"
     yargs "^13.3.0"
+
+yargs@13.2.4:
+  version "13.2.4"
+  resolved "https://registry.yarnpkg.com/yargs/-/yargs-13.2.4.tgz#0b562b794016eb9651b98bd37acf364aa5d6dc83"
+  integrity sha512-HG/DWAJa1PAnHT9JAhNa8AbAv3FPaiLzioSjCcmuXXhP8MlpHO5vwls4g4j6n30Z74GVQj8Xa62dWVx1QCGklg==
+  dependencies:
+    cliui "^5.0.0"
+    find-up "^3.0.0"
+    get-caller-file "^2.0.1"
+    os-locale "^3.1.0"
+    require-directory "^2.1.1"
+    require-main-filename "^2.0.0"
+    set-blocking "^2.0.0"
+    string-width "^3.0.0"
+    which-module "^2.0.0"
+    y18n "^4.0.0"
+    yargs-parser "^13.1.0"
 
 yargs@13.3.2, yargs@^13.3.0:
   version "13.3.2"
