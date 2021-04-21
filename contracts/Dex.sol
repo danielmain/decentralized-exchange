@@ -12,7 +12,6 @@ contract Dex is Wallet {
         BUY,
         SELL
     }
-
     struct Order {
         address trader;
         uint amount;

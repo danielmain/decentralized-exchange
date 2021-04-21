@@ -1,5 +1,6 @@
 const _ = require('lodash');
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { ethers } = require("hardhat");
+const { expect } = require("chai");
 const Web3Utils = require('web3-utils');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
@@ -9,59 +10,61 @@ const Side = {
 };
 
 const Tokens = {
-    LINK: Web3Utils.fromUtf8("LINK"),
+    LINK: ethers.utils.formatBytes32String("LINK"),
 }
 
 let dex;
 let link;
-
-console.dir(accounts);
+let accounts = [];
+let owner;
+let addr1;
+let addr2;
 
 describe('Dex handling market orders', function () {
     beforeEach(async function () {
-        const Dex = await contract.fromArtifact('Dex');
-        const Link = await contract.fromArtifact('Link');
-        dex = await Dex.new({ from: accounts[0] });
-        link = await Link.new({ from: accounts[0] });
+        const Dex = await ethers.getContractFactory('Dex');
+        const Link = await ethers.getContractFactory('Link');
+        dex = await Dex.deploy();
+        link = await Link.deploy();
     });
 
     it("cannot plase a market BUY order if orderbook is empty", async () => {
-        await expectRevert(
-            dex.createMarketOrder(Side.BUY, Tokens.LINK, 2, { from: accounts[1] }),
-            'The order book is empty for this operation'
-        );
-        await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
-        await link.approve(dex.address, 100, { from: accounts[0] });
-        await dex.deposit(100, Tokens.LINK, { from: accounts[0] });
-        await dex.createLimitOrder(Side.SELL, Tokens.LINK, 90, 100, { from: accounts[0] });
-        await dex.createMarketOrder(Side.BUY, Tokens.LINK, 2, { from: accounts[1] });
+        let [owner, addr1, addr2] = await ethers.getSigners();
+        await expect(
+            dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 2)
+        ).to.be.revertedWith('The order book is empty for this operation');
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await link.connect(owner).approve(dex.address, 100);
+        await dex.connect(owner).deposit(100, Tokens.LINK);
+        await dex.connect(owner).createLimitOrder(Side.SELL, Tokens.LINK, 90, 100);
+        await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 2);
     });
 
-    it("should have enough eth balance before placing a market BUY order", async () => {
+    xit("should have enough eth balance before placing a market BUY order", async () => {
         // await expectRevert(
-        //     dex.createMarketOrder(Side.BUY, Tokens.LINK, 100, { from: accounts[1] })
+        //     dex.createMarketOrder(Side.BUY, Tokens.LINK, 100, { from: addr1.address })
         // );
-        // await dex.depositEth({ value: 2000 }, { from: accounts[1] });
+        // await dex.depositEth({ value: 2000 }, { from: addr1.address });
         await expectRevert(
-            dex.createMarketOrder(Side.BUY, Tokens.LINK, 2, { from: accounts[1] }),
+            dex.createMarketOrder(Side.BUY, Tokens.LINK, 2, { from: addr1.address }),
             'The order book is empty for this operation'
         );
-        await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
-        await link.approve(dex.address, 100, { from: accounts[0] });
-        await dex.deposit(100, Tokens.LINK, { from: accounts[0] });
-        await dex.createLimitOrder(Side.SELL, Tokens.LINK, 90, 100, { from: accounts[0] });
-        await dex.createMarketOrder(Side.BUY, Tokens.LINK, 2, { from: accounts[1] });
+        await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
+        await link.approve(dex.address, 100, { from: owner.address });
+        await dex.deposit(100, Tokens.LINK, { from: owner.address });
+        await dex.createLimitOrder(Side.SELL, Tokens.LINK, 90, 100, { from: owner.address });
+        await dex.createMarketOrder(Side.BUY, Tokens.LINK, 2, { from: addr1.address });
     });
 
     xit("should have enough token balance before placing a market SELL order", async () => {
-        await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+        await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
         await expectRevert(
-            dex.createMarketOrder(Side.SELL, Tokens.LINK, 100, { from: accounts[1] })
+            dex.createMarketOrder(Side.SELL, Tokens.LINK, 100, { from: addr1.address })
         );
-        await link.approve(dex.address, 100, { from: accounts[0] });
-        await dex.deposit(10, Tokens.LINK, { from: accounts[1] });
+        await link.approve(dex.address, 100, { from: owner.address });
+        await dex.deposit(10, Tokens.LINK, { from: addr1.address });
         expectEvent(
-            await dex.createMarketOrder(Side.SELL, Tokens.LINK, 2, { from: accounts[1] })
+            await dex.createMarketOrder(Side.SELL, Tokens.LINK, 2, { from: addr1.address })
         );
     });
 
@@ -71,8 +74,8 @@ describe('Dex handling market orders', function () {
 //     beforeEach(async function () {
 //         const Dex = await contract.fromArtifact('Dex');
 //         const Link = await contract.fromArtifact('Link');
-//         dex = await Dex.new({ from: accounts[0] });
-//         link = await Link.new({ from: accounts[0] });
+//         dex = await Dex.new({ from: owner.address });
+//         link = await Link.new({ from: owner.address });
 //     });
 
 //     it("should determine if the order fits in the middle position between two orders sorted by price", async () => {
@@ -100,7 +103,7 @@ describe('Dex handling market orders', function () {
 //     });
 
 //     it("should get the correct position to place an order if orderbook is empty", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
 //         await dex.depositEth({ value: 2000 });
 
 //         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
@@ -122,7 +125,7 @@ describe('Dex handling market orders', function () {
 //     });
 
 //     it("should get the correct position to place an order if orderbook has 1 order already", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
 //         await dex.depositEth({ value: 2000 });
 
 //         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
@@ -147,7 +150,7 @@ describe('Dex handling market orders', function () {
 //     });
 
 //     it("should get the correct position to place an order if orderbook has more than 2 orders already", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
 //         await dex.depositEth({ value: 2000 });
 
 //         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
@@ -173,7 +176,7 @@ describe('Dex handling market orders', function () {
 //     });
 
 //     it("createSortedLimitOrder should work when orderbook is empty", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
 //         await dex.depositEth({ value: 2000 });
 //         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
 
@@ -187,7 +190,7 @@ describe('Dex handling market orders', function () {
 //     });
 
 //     it("should have a positive ETH balance before creating BUY limit order", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
 //         await expectRevert(
 //             dex.createLimitOrder(Side.BUY, Tokens.LINK, 100, 60)
 //         );
@@ -198,17 +201,17 @@ describe('Dex handling market orders', function () {
 //     });
 
 //     it("should have enough balance before placing a limit SELL order", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: accounts[0] });
+//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
 //         await expectRevert(
 //             dex.createLimitOrder(Side.SELL, Tokens.LINK, 100, 100)
 //         );
 //         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
 //         expect(orderbook.length).toBe(0);
 
-//         await link.approve(dex.address, 100, { from: accounts[0] });
-//         await dex.deposit(10, Tokens.LINK, { from: accounts[0] });
+//         await link.approve(dex.address, 100, { from: owner.address });
+//         await dex.deposit(10, Tokens.LINK, { from: owner.address });
 //         expectEvent(
-//             await dex.createLimitOrder(Side.SELL, Tokens.LINK, 2, 51, { from: accounts[0] })
+//             await dex.createLimitOrder(Side.SELL, Tokens.LINK, 2, 51, { from: owner.address })
 //         );
 //         orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
 //         expect(orderbook.length).toBe(1);
