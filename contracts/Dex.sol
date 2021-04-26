@@ -38,7 +38,7 @@ contract Dex is Wallet {
 
     function hasSufficientBalanceForMarket(Side side, bytes32 ticker, uint amount) view public {
         if (side == Side.BUY) {
-            require(balances[msg.sender][bytes32("ETH")] >= 0, 'Insuffient eth balance');
+            require(balances[msg.sender][bytes32("ETH")] > 0, 'Insuffient eth balance');
         } else {
             require(balances[msg.sender][ticker] >= 1, 'Insuffient token balance');
         }
@@ -70,6 +70,10 @@ contract Dex is Wallet {
         // } else {
         //     createSellMarketOrder(side, ticker, amount);
         // }
+    }
+    
+    function getMyBalance() view public returns (uint256) {
+        return balances[msg.sender][bytes32("ETH")];
     }
 
     function createBuyMarketOrder(Side side, bytes32 ticker, uint amount) public {
