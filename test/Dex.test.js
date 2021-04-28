@@ -1,6 +1,6 @@
 const _ = require('lodash');
-const { ethers } = require("hardhat");
-const { expect } = require("chai");
+const { ethers } = require('hardhat');
+const { expect } = require('chai');
 const Web3Utils = require('web3-utils');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
@@ -10,7 +10,7 @@ const Side = {
 };
 
 const Tokens = {
-    LINK: ethers.utils.formatBytes32String("LINK"),
+    LINK: ethers.utils.formatBytes32String('LINK'),
 }
 
 let dex;
@@ -28,7 +28,7 @@ describe('Dex handling market orders', function () {
         [owner, addr1] = await ethers.getSigners();
     });
 
-    it("cannot plase a market BUY order if orderbook is empty", async () => {
+    it('cannot plase a market BUY order if orderbook is empty', async () => {
         await dex.connect(addr1).depositEth({ value: 2000 });
         await expect(
             dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 2)
@@ -40,7 +40,7 @@ describe('Dex handling market orders', function () {
         await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 2);
     });
 
-    it("should have enough eth balance before placing a market BUY order", async () => {
+    it('should have enough eth balance before placing a market BUY order', async () => {
         await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await link.connect(owner).approve(dex.address, 100);
         await dex.connect(owner).deposit(100, Tokens.LINK);
@@ -55,7 +55,7 @@ describe('Dex handling market orders', function () {
         await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 100);
     });
 
-    it("should have enough token balance before placing a market SELL order", async () => {
+    it('should have enough token balance before placing a market SELL order', async () => {
         await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await link.connect(owner).approve(dex.address, 100);
         await expect(
@@ -69,151 +69,150 @@ describe('Dex handling market orders', function () {
 
 });
 
-// describe('Dex handling limit orders', function () {
-//     beforeEach(async function () {
-//         const Dex = await contract.fromArtifact('Dex');
-//         const Link = await contract.fromArtifact('Link');
-//         dex = await Dex.new({ from: owner.address });
-//         link = await Link.new({ from: owner.address });
-//     });
+describe('Dex handling limit orders', function () {
+    beforeEach(async function () {
+        const Dex = await ethers.getContractFactory('Dex');
+        const Link = await ethers.getContractFactory('Link');
+        dex = await Dex.deploy();
+        link = await Link.deploy();
+        [owner, addr1] = await ethers.getSigners();
+    });
 
-//     it("should determine if the order fits in the middle position between two orders sorted by price", async () => {
-//         const lowPriceOrder = await dex.generateNewOrder(10, 15);
-//         const highPriceOrder = await dex.generateNewOrder(10, 45);
-//         const newMiddleOrder = await dex.generateNewOrder(10, 20);
+    it('should determine if the order fits in the middle position between two orders sorted by price', async () => {
+        const lowPriceOrder = await dex.generateNewOrder(10, 15);
+        const highPriceOrder = await dex.generateNewOrder(10, 45);
+        const newMiddleOrder = await dex.generateNewOrder(10, 20);
 
-//         let result = await dex.isMiddlePosition(highPriceOrder, newMiddleOrder, lowPriceOrder);
-//         expect(result).toBeTruthy();
+        let result = await dex.isMiddlePosition(highPriceOrder, newMiddleOrder, lowPriceOrder);
+        expect(result).to.be.true;
 
-//         const newSmallerOrder = await dex.generateNewOrder(10, 10);
-//         result = await dex.isMiddlePosition(highPriceOrder, newSmallerOrder, lowPriceOrder);
-//         expect(result).toBeFalsy();
+        const newSmallerOrder = await dex.generateNewOrder(10, 10);
+        result = await dex.isMiddlePosition(highPriceOrder, newSmallerOrder, lowPriceOrder);
+        expect(result).to.be.false;
 
-//         const newHigherOrder = await dex.generateNewOrder(10, 50);
-//         result = await dex.isMiddlePosition(highPriceOrder, newHigherOrder, lowPriceOrder);
-//         expect(result).toBeFalsy();
-//         result = await dex.isMiddlePosition(newHigherOrder, highPriceOrder, lowPriceOrder);
-//         expect(result).toBeTruthy();
+        const newHigherOrder = await dex.generateNewOrder(10, 50);
+        result = await dex.isMiddlePosition(highPriceOrder, newHigherOrder, lowPriceOrder);
+        expect(result).to.be.false;
+        result = await dex.isMiddlePosition(newHigherOrder, highPriceOrder, lowPriceOrder);
+        expect(result).to.be.true;
 
-//         result = await dex.isMiddlePosition(highPriceOrder, lowPriceOrder, lowPriceOrder);
-//         expect(result).toBeTruthy();
-//         result = await dex.isMiddlePosition(highPriceOrder, highPriceOrder, lowPriceOrder);
-//         expect(result).toBeTruthy();
-//     });
+        result = await dex.isMiddlePosition(highPriceOrder, lowPriceOrder, lowPriceOrder);
+        expect(result).to.be.true;
+        result = await dex.isMiddlePosition(highPriceOrder, highPriceOrder, lowPriceOrder);
+        expect(result).to.be.true;
+    });
 
-//     it("should get the correct position to place an order if orderbook is empty", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
-//         await dex.depositEth({ value: 2000 });
+    it('should get the correct position to place an order if orderbook is empty', async () => {
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await dex.depositEth({ value: 2000 });
 
-//         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-//         let newOrder;
-//         let position;
+        let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        let newOrder;
+        let position;
 
-//         newOrder = await dex.generateNewOrder(10, 45);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
-//         expect(position.toNumber()).toBe(0);
+        newOrder = await dex.generateNewOrder(10, 45);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
+        expect(position.toNumber()).to.be.equal(0);
 
-//         newOrder = await dex.generateNewOrder(10, 35);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
-//         expect(position.toNumber()).toBe(0);
+        newOrder = await dex.generateNewOrder(10, 35);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
+        expect(position.toNumber()).to.be.equal(0);
 
-//         newOrder = await dex.generateNewOrder(10, 55);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
+        newOrder = await dex.generateNewOrder(10, 55);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
 
-//         expect(position.toNumber()).toBe(0);
-//     });
+        expect(position.toNumber()).to.be.equal(0);
+    });
 
-//     it("should get the correct position to place an order if orderbook has 1 order already", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
-//         await dex.depositEth({ value: 2000 });
+    it('should get the correct position to place an order if orderbook has 1 order already', async () => {
+        await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
+        await dex.depositEth({ value: 2000 });
 
-//         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
+        await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
 
-//         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-//         let newOrder;
-//         let position;
+        let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        let newOrder;
+        let position;
 
-//         newOrder = await dex.generateNewOrder(10, 45);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
-//         expect(position.toNumber()).toBe(1);
+        newOrder = await dex.generateNewOrder(10, 45);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
+        expect(position.toNumber()).to.be.equal(1);
 
-//         newOrder = await dex.generateNewOrder(10, 35);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
-//         expect(position.toNumber()).toBe(1);
+        newOrder = await dex.generateNewOrder(10, 35);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
+        expect(position.toNumber()).to.be.equal(1);
 
-//         newOrder = await dex.generateNewOrder(10, 55);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
+        newOrder = await dex.generateNewOrder(10, 55);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
 
-//         expect(position.toNumber()).toBe(0);
+        expect(position.toNumber()).to.be.equal(0);
 
-//     });
+    });
 
-//     it("should get the correct position to place an order if orderbook has more than 2 orders already", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
-//         await dex.depositEth({ value: 2000 });
+    it('should get the correct position to place an order if orderbook has more than 2 orders already', async () => {
+        await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
+        await dex.depositEth({ value: 2000 });
 
-//         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
-//         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 40);
-//         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
+        await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
+        await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 40);
+        await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
 
-//         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-//         let newOrder;
-//         let position;
+        let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        let newOrder;
+        let position;
 
-//         newOrder = await dex.generateNewOrder(10, 45);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
-//         expect(position.toNumber()).toBe(1);
+        newOrder = await dex.generateNewOrder(10, 45);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
+        expect(position.toNumber()).to.be.equal(1);
 
-//         newOrder = await dex.generateNewOrder(10, 35);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
-//         expect(position.toNumber()).toBe(2);
+        newOrder = await dex.generateNewOrder(10, 35);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
+        expect(position.toNumber()).to.be.equal(2);
 
-//         newOrder = await dex.generateNewOrder(10, 55);
-//         position = await dex.getPositionToPlace(orderbook, newOrder);
+        newOrder = await dex.generateNewOrder(10, 55);
+        position = await dex.getPositionToPlace(orderbook, newOrder);
         
-//         expect(position.toNumber()).toBe(3);
-//     });
+        expect(position.toNumber()).to.be.equal(3);
+    });
 
-//     it("createSortedLimitOrder should work when orderbook is empty", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
-//         await dex.depositEth({ value: 2000 });
-//         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+    it('createSortedLimitOrder should work when orderbook is empty', async () => {
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await dex.depositEth({ value: 2000 });
+        let orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
 
-//         let result = _.find(orderbook, (value, index, array) => index !== 0 && array[index - 1].price <= value.price);
-//         expect(result).toBeFalsy();
+        let result = _.find(orderbook, (value, index, array) => index !== 0 && array[index - 1].price <= value.price);
+        expect(result).to.be.undefined;
 
-//         await dex.createSortedLimitOrder(Side.BUY, Tokens.LINK, 10, 45);
+        await dex.createSortedLimitOrder(Side.BUY, Tokens.LINK, 10, 45);
 
-//         orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-//         expect(orderbook.length).toBe(1)
-//     });
+        orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        expect(orderbook.length).to.be.equal(1)
+    });
 
-//     it("should have a positive ETH balance before creating BUY limit order", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
-//         await expectRevert(
-//             dex.createLimitOrder(Side.BUY, Tokens.LINK, 100, 60)
-//         );
-//         await dex.depositEth({ value: 2000 });
-//         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
-//         const orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-//         expect(orderbook.length).toBe(1);
-//     });
+    it('should have a positive ETH balance before creating BUY limit order', async () => {
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await expect(
+            dex.createLimitOrder(Side.BUY, Tokens.LINK, 100, 60)
+        ).to.be.revertedWith('Insuffient eth balance');
+        await dex.depositEth({ value: 2000 });
+        await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
+        const orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        expect(orderbook.length).to.be.equal(1);
+    });
 
-//     it("should have enough balance before placing a limit SELL order", async () => {
-//         await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
-//         await expectRevert(
-//             dex.createLimitOrder(Side.SELL, Tokens.LINK, 100, 100)
-//         );
-//         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
-//         expect(orderbook.length).toBe(0);
+    it('should have enough balance before placing a limit SELL order', async () => {
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await expect(
+            dex.createLimitOrder(Side.SELL, Tokens.LINK, 100, 100)
+        ).to.be.revertedWith('Insuffient token balance');
+        let orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
+        expect(orderbook.length).to.be.equal(0);
 
-//         await link.approve(dex.address, 100, { from: owner.address });
-//         await dex.deposit(10, Tokens.LINK, { from: owner.address });
-//         expectEvent(
-//             await dex.createLimitOrder(Side.SELL, Tokens.LINK, 2, 51, { from: owner.address })
-//         );
-//         orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
-//         expect(orderbook.length).toBe(1);
-//     });
+        await link.approve(dex.address, 100, { from: owner.address });
+        await dex.connect(owner).deposit(10, Tokens.LINK);
+        await dex.connect(owner).createLimitOrder(Side.SELL, Tokens.LINK, 2, 51)
+        orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
+        expect(orderbook.length).to.be.equal(1);
+    });
 
-// });
+});
