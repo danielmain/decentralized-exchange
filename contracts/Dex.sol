@@ -87,12 +87,16 @@ contract Dex is Wallet {
             if (amountFilled <= orderBook[ticker][side][i].amount) {
                 orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
                 balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(amountFilled);
+                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
                 balances[orderOwner][ticker] = balances[orderOwner][ticker].add(amount);
+                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
                 return;
             } else {
                 amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
                 balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(orderBook[ticker][side][i].amount);
+                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
                 balances[orderOwner][ticker] = balances[orderOwner][ticker].add(orderBook[ticker][side][i].amount);
+                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
                 delete orderBook[ticker][side][i];
             }
         }
@@ -105,12 +109,16 @@ contract Dex is Wallet {
             if (amountFilled <= orderBook[ticker][side][i].amount) {
                 orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
                 balances[msg.sender][ticker] = balances[msg.sender][ticker].add(amountFilled);
+                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
                 balances[orderOwner][ticker] = balances[orderOwner][ticker].sub(amount);
+                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
                 return;
             } else {
                 amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
                 balances[msg.sender][ticker] = balances[msg.sender][ticker].add(orderBook[ticker][side][i].amount);
+                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
                 balances[orderOwner][ticker] = balances[orderOwner][ticker].sub(orderBook[ticker][side][i].amount);
+                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
                 delete orderBook[ticker][side][i];
             }
         }

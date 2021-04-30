@@ -688,8 +688,8 @@
       ]
     },
     "/Users/daniel/Workspace/dex-example/contracts/Dex.sol": {
-      "lastModificationDate": 1619814744956,
-      "contentHash": "bb217ea1fb2f4568cdcfbeac903ca11f",
+      "lastModificationDate": 1619815809712,
+      "contentHash": "574433e94b75332f87d3cba17b70f7eb",
       "sourceName": "contracts/Dex.sol",
       "solcConfig": {
         "version": "0.7.6",
