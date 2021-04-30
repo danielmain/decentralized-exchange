@@ -3,6 +3,7 @@ const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const Web3Utils = require('web3-utils');
 const { expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const BigNumber = require('bignumber.js');
 
 const Side = {
     BUY: 0,
@@ -64,7 +65,41 @@ describe('Dex handling market orders', function () {
         await dex.connect(addr1).depositEth({ value: 20000 });
         await dex.connect(owner).deposit(100, Tokens.LINK);
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 50, 100);
-        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 50)
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 50);
+    });
+
+    it('market orders should be filled until the order book is empty or the market order is 100% filled', async () => {
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await link.connect(owner).approve(dex.address, 100);
+        await dex.connect(owner).deposit(100, Tokens.LINK);
+
+        await dex.connect(addr1).depositEth({ value: 2000 });
+
+        await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
+        await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 40);
+        await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
+
+        let balanceOwner;
+
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(99);
+
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(98);
+
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 8);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(90);
+
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 11);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(79);
+
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 0);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(79);
     });
 
 });
@@ -125,7 +160,7 @@ describe('Dex handling limit orders', function () {
     });
 
     it('should get the correct position to place an order if orderbook has 1 order already', async () => {
-        await dex.addToken(Tokens.LINK, link.address, { from: owner.address });
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await dex.depositEth({ value: 2000 });
 
         await dex.createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
@@ -184,9 +219,8 @@ describe('Dex handling limit orders', function () {
         expect(result).to.be.undefined;
 
         await dex.createSortedLimitOrder(Side.BUY, Tokens.LINK, 10, 45);
-
         orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-        expect(orderbook.length).to.be.equal(1)
+        expect(orderbook.length).to.be.equal(1);
     });
 
     it('should have a positive ETH balance before creating BUY limit order', async () => {
@@ -208,7 +242,7 @@ describe('Dex handling limit orders', function () {
         let orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);
         expect(orderbook.length).to.be.equal(0);
 
-        await link.approve(dex.address, 100, { from: owner.address });
+        await link.connect(owner).approve(dex.address, 100);
         await dex.connect(owner).deposit(10, Tokens.LINK);
         await dex.connect(owner).createLimitOrder(Side.SELL, Tokens.LINK, 2, 51)
         orderbook = await dex.getOrderBook(Tokens.LINK, Side.SELL);

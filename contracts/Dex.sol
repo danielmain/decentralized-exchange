@@ -7,28 +7,28 @@ import "../contracts/Wallet.sol";
 contract Dex is Wallet {
 
     using SafeMath for uint256;
-
+    
     enum Side {
         BUY,
         SELL
     }
     struct Order {
         address trader;
-        uint amount;
-        uint price;
+        uint256 amount;
+        uint256 price;
     }
 
-    mapping(bytes32 => mapping(uint => Order[])) public orderBook;
+    mapping(bytes32 => mapping(uint256 => Order[])) public orderBook;
 
     function getOrderBook(bytes32 ticker, Side side) view public returns(Order[] memory){
         return orderBook[ticker][uint(side)];
     }
 
-    function generateNewOrder(uint amount, uint price) view public returns(Order memory) {
+    function generateNewOrder(uint256 amount, uint256 price) view public returns(Order memory) {
         return Order(msg.sender, amount, price);
     }
 
-    function hasSufficientBalanceForLimit(Side side, bytes32 ticker, uint amount, uint price) view public {
+    function hasSufficientBalanceForLimit(Side side, bytes32 ticker, uint256 amount, uint256 price) view public {
         if (side == Side.BUY) {
             require(balances[msg.sender][bytes32("ETH")] >= amount.mul(price), 'Insuffient eth balance');
         } else {
@@ -36,7 +36,7 @@ contract Dex is Wallet {
         }
     }
 
-    function hasSufficientBalanceForMarket(Side side, bytes32 ticker, uint amount) view public {
+    function hasSufficientBalanceForMarket(Side side, bytes32 ticker, uint256 amount) view public {
         if (side == Side.BUY) {
             require(balances[msg.sender][bytes32("ETH")] > 0, 'Insuffient eth balance');
         } else {
@@ -44,7 +44,7 @@ contract Dex is Wallet {
         }
     }
 
-    function isOrderBookEmpty(Side side, bytes32 ticker, uint amount) view public {
+    function isOrderBookEmpty(Side side, bytes32 ticker, uint256 amount) view public {
         if (side == Side.BUY) {
             require(orderBook[ticker][uint(Side.SELL)].length > 0, "The order book is empty for this operation");
         } else {
@@ -52,60 +52,66 @@ contract Dex is Wallet {
         }
     }
 
-   function createLimitOrder(Side side, bytes32 ticker, uint amount, uint price) public {
+   function createLimitOrder(Side side, bytes32 ticker, uint256 amount, uint256 price) public {
         hasSufficientBalanceForLimit(side, ticker, amount, price);
         orderBook[ticker][uint(side)].push(Order(msg.sender, amount, price));
     }
 
-    function createSortedLimitOrder(Side side, bytes32 ticker, uint amount, uint price) public {
+    function createSortedLimitOrder(Side side, bytes32 ticker, uint256 amount, uint256 price) public {
         hasSufficientBalanceForLimit(side, ticker, amount, price);
         addNewOrderInSortedPosition(orderBook[ticker][uint(side)], Order(msg.sender, amount, price));
     }
 
-    function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
+    function createMarketOrder(Side side, bytes32 ticker, uint256 amount) public {
         isOrderBookEmpty(side, ticker, amount);
         hasSufficientBalanceForMarket(side, ticker, amount);
-        // if (side == Side.BUY) {
-        //     createBuyMarketOrder(side, ticker, amount);
-        // } else {
-        //     createSellMarketOrder(side, ticker, amount);
-        // }
+        if (side == Side.BUY) {
+            createBuyMarketOrder(uint(Side.SELL) ,ticker, amount);
+        } else {
+            createSellMarketOrder(uint(Side.BUY), ticker, amount);
+        }
     }
     
-    function getMyBalance() view public returns (uint256) {
+    function getMyEthBalance() view public returns (uint256) {
         return balances[msg.sender][bytes32("ETH")];
     }
 
-    function createBuyMarketOrder(Side side, bytes32 ticker, uint amount) public {
-        for (uint256 i = 0; i < orderBook[ticker][uint(side)].length && amount > 0; i++) {
-            address seller = orderBook[ticker][uint(side)][i].trader;
-            if (amount < orderBook[ticker][uint(side)][i].amount) {
-                orderBook[ticker][uint(side)][i].amount.sub(amount);
-                balances[msg.sender][ticker].add(amount);
-                balances[seller][ticker].sub(amount);
+    function getMyTokenBalance(bytes32 ticker) view public returns (uint256) {
+        return balances[msg.sender][ticker];
+    }
+
+    function createSellMarketOrder(uint side, bytes32 ticker, uint256 amount) public {
+        uint256 amountFilled = amount;
+        for (uint256 i = 0; i < orderBook[ticker][side].length && amountFilled > 0; i++) {
+            address orderOwner = orderBook[ticker][side][i].trader;
+            if (amountFilled <= orderBook[ticker][side][i].amount) {
+                orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
+                balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(amountFilled);
+                balances[orderOwner][ticker] = balances[orderOwner][ticker].add(amount);
+                return;
             } else {
-                amount = amount - orderBook[ticker][uint(side)][i].amount;
-                orderBook[ticker][uint(side)][i].amount.sub(amount);
-                balances[msg.sender][ticker].add(amount);
-                balances[seller][ticker].sub(amount);
-                delete orderBook[ticker][uint(side)][i];
+                amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
+                balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(orderBook[ticker][side][i].amount);
+                balances[orderOwner][ticker] = balances[orderOwner][ticker].add(orderBook[ticker][side][i].amount);
+                delete orderBook[ticker][side][i];
             }
         }
     }
 
-    function createSellMarketOrder(Side side, bytes32 ticker, uint amount) public {
-        for (uint256 i = 0; i < orderBook[ticker][uint(side)].length && amount > 0; i++) {
-            address buyer = orderBook[ticker][uint(side)][i].trader;
-            if (amount < orderBook[ticker][uint(side)][i].amount) {
-                orderBook[ticker][uint(side)][i].amount.sub(amount);
-                balances[buyer][ticker].add(amount);
-                balances[msg.sender][ticker].sub(amount);
+    function createBuyMarketOrder(uint side, bytes32 ticker, uint256 amount) public {
+        uint256 amountFilled = amount;
+        for (uint256 i = 0; i < orderBook[ticker][side].length && amountFilled > 0; i++) {
+            address orderOwner = orderBook[ticker][side][i].trader;
+            if (amountFilled <= orderBook[ticker][side][i].amount) {
+                orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
+                balances[msg.sender][ticker] = balances[msg.sender][ticker].add(amountFilled);
+                balances[orderOwner][ticker] = balances[orderOwner][ticker].sub(amount);
+                return;
             } else {
-                amount = amount - orderBook[ticker][uint(side)][i].amount;
-                orderBook[ticker][uint(side)][i].amount.sub(amount);
-                balances[buyer][ticker].add(amount);
-                balances[msg.sender][ticker].sub(amount);
-                delete orderBook[ticker][uint(side)][i];
+                amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
+                balances[msg.sender][ticker] = balances[msg.sender][ticker].add(orderBook[ticker][side][i].amount);
+                balances[orderOwner][ticker] = balances[orderOwner][ticker].sub(orderBook[ticker][side][i].amount);
+                delete orderBook[ticker][side][i];
             }
         }
     }
@@ -147,7 +153,7 @@ contract Dex is Wallet {
     }
 
     function addNewOrderInSortedPosition(Order[] storage orders, Order memory newOrder) internal {
-        uint position = getPositionToPlace(orders, newOrder);
+        uint256 position = getPositionToPlace(orders, newOrder);
         if (position >= orders.length) {
             orders.push(newOrder);
         } else {
