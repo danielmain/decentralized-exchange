@@ -80,11 +80,13 @@ describe('Dex handling market orders', function () {
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 40);
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
 
-        let balanceOwner;
+        let balanceOwner, orderbook;
 
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(99);
+        orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        expect(orderbook.length).to.be.equals(2);
 
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
