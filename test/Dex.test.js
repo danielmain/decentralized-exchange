@@ -31,9 +31,7 @@ describe('Dex handling market orders', function () {
 
     it('cannot plase a market BUY order if orderbook is empty', async () => {
         await dex.connect(addr1).depositEth({ value: 2000 });
-        await expect(
-            dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 2)
-        ).to.be.revertedWith('The order book is empty for this operation');
+        await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 2);
         await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await link.connect(owner).approve(dex.address, 100);
         await dex.connect(owner).deposit(100, Tokens.LINK);
@@ -45,9 +43,7 @@ describe('Dex handling market orders', function () {
         await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await link.connect(owner).approve(dex.address, 100);
         await dex.connect(owner).deposit(100, Tokens.LINK);
-        await expect(
-            dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 100)
-        ).to.be.revertedWith('The order book is empty for this operation');
+        await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 100);
         await dex.connect(owner).createLimitOrder(Side.SELL, Tokens.LINK, 90, 100);
         await expect(
             dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 100)
@@ -59,9 +55,7 @@ describe('Dex handling market orders', function () {
     it('should have enough token balance before placing a market SELL order', async () => {
         await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await link.connect(owner).approve(dex.address, 100);
-        await expect(
-            dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 100)
-        ).to.be.revertedWith('The order book is empty for this operation');
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 100);
         await dex.connect(addr1).depositEth({ value: 20000 });
         await dex.connect(owner).deposit(100, Tokens.LINK);
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 50, 100);
@@ -248,6 +242,34 @@ describe('Dex handling market orders', function () {
 
         orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
         expect(orderbook.length).to.be.equals(0);
+    });
+
+    it('market orders can be submitted even if the orderbook is empty', async () => {
+        let balanceAddr1;
+        let balanceOwner;
+
+        await dex.connect(owner).addToken(Tokens.LINK, link.address);
+        await link.connect(owner).approve(dex.address, 100);
+        await dex.connect(owner).deposit(100, Tokens.LINK);
+
+        await dex.connect(owner).depositEth({ value: 20000 });
+        await dex.connect(addr1).depositEth({ value: 20000 });
+        
+        const totalSupply = await link.totalSupply();
+        expect(Web3Utils.hexToNumber(totalSupply)).to.be.equals(1000);
+
+        // Initial status before any operation ----------------------------------- //
+        balanceAddr1 = await dex.connect(addr1).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceAddr1)).to.be.equals(0);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(100);
+
+        // Start adding market orders --------------------------------------------- //
+        await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(100);
+        balanceAddr1 = await dex.connect(addr1).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceAddr1)).to.be.equals(0);
     });
 
 });

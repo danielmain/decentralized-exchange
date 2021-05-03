@@ -45,11 +45,11 @@ contract Dex is Wallet {
         }
     }
 
-    function isOrderBookEmpty(Side side, bytes32 ticker, uint256 amount) view public {
+    function isOrderBookEmpty(Side side, bytes32 ticker, uint256 amount) view public returns(bool) {
         if (side == Side.BUY) {
-            require(orderBook[ticker][uint(Side.SELL)].length > 0, "The order book is empty for this operation");
+            return orderBook[ticker][uint(Side.SELL)].length > 0;
         } else {
-            require(orderBook[ticker][uint(Side.BUY)].length > 0, "The order book is empty for this operation");
+            return orderBook[ticker][uint(Side.BUY)].length > 0;
         }
     }
 
@@ -69,12 +69,13 @@ contract Dex is Wallet {
     }
 
     function createMarketOrder(Side side, bytes32 ticker, uint256 amount) public {
-        isOrderBookEmpty(side, ticker, amount);
-        hasSufficientBalanceForMarket(side, ticker, amount);
-        if (side == Side.BUY) {
-            createBuyMarketOrder(uint(Side.SELL) ,ticker, amount);
-        } else {
-            createSellMarketOrder(uint(Side.BUY), ticker, amount);
+        if (isOrderBookEmpty(side, ticker, amount)) {
+            hasSufficientBalanceForMarket(side, ticker, amount);
+            if (side == Side.BUY) {
+                createBuyMarketOrder(uint(Side.SELL) ,ticker, amount);
+            } else {
+                createSellMarketOrder(uint(Side.BUY), ticker, amount);
+            }
         }
     }
     
