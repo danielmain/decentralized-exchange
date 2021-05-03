@@ -154,10 +154,6 @@ contract Dex is Wallet {
         }
     }
 
-    function getTokenBalance(bytes32 token) public returns (uint) {
-        return balances[msg.sender][token];
-    }
-
     function resetOrderBook(bytes32 ticker, Side side) view public returns(Order[] memory){
         return orderBook[ticker][uint(side)];
     }
