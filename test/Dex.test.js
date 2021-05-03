@@ -69,6 +69,9 @@ describe('Dex handling market orders', function () {
     });
 
     it('sell market orders should be filled until the order book is empty or the market order is 100% filled', async () => {
+        let balanceAddr1, ethBalanceAddr1;
+        let balanceOwner, ethBalanceOwner;
+
         await dex.connect(owner).addToken(Tokens.LINK, link.address);
         await link.connect(owner).approve(dex.address, 100);
         await dex.connect(owner).deposit(100, Tokens.LINK);
@@ -77,24 +80,39 @@ describe('Dex handling market orders', function () {
         await dex.connect(addr1).depositEth({ value: 20000 });
 
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 50);
+        ethBalanceAddr1 = await dex.connect(addr1).getMyEthBalance();
+        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19500);
+
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 40);
+        ethBalanceAddr1 = await dex.connect(addr1).getMyEthBalance();
+        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19100);
+
         await dex.connect(addr1).createLimitOrder(Side.BUY, Tokens.LINK, 10, 30);
+        ethBalanceAddr1 = await dex.connect(addr1).getMyEthBalance();
+        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(18800);
 
-        let balanceOwner, orderbook;
-
+        balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(100);
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(99);
+        balanceAddr1 = await dex.connect(addr1).getMyTokenBalance(Tokens.LINK);
+        expect(Web3Utils.hexToNumber(balanceAddr1)).to.be.equals(1);
+
         orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
-        expect(orderbook.length).to.be.equals(2);
+        expect(orderbook.length).to.be.equals(3);
 
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 1);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(98);
+        orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        expect(orderbook.length).to.be.equals(3);
 
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 8);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(90);
+        orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        expect(orderbook.length).to.be.equals(2);
 
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 11);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
@@ -107,6 +125,9 @@ describe('Dex handling market orders', function () {
         await dex.connect(owner).createMarketOrder(Side.SELL, Tokens.LINK, 79);
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(70);
+
+        orderbook = await dex.getOrderBook(Tokens.LINK, Side.BUY);
+        expect(orderbook.length).to.be.equals(0);
     });
 
     it('buy market orders should be filled until the order book is empty or the market order is 100% filled', async () => {
@@ -133,7 +154,7 @@ describe('Dex handling market orders', function () {
         expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19950);
 
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
-        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(99);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(69);
         ethBalanceOwner = await dex.connect(owner).getMyEthBalance();
         expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(20050);
     
@@ -146,7 +167,7 @@ describe('Dex handling market orders', function () {
         expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19900);
 
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
-        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(98);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(68);
         ethBalanceOwner = await dex.connect(owner).getMyEthBalance();
         expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(20100);
 
@@ -159,7 +180,7 @@ describe('Dex handling market orders', function () {
         expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19500);
 
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
-        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(90);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(60);
         ethBalanceOwner = await dex.connect(owner).getMyEthBalance();
         expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(20500);
 
@@ -169,12 +190,12 @@ describe('Dex handling market orders', function () {
         balanceAddr1 = await dex.connect(addr1).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceAddr1)).to.be.equals(21);
         ethBalanceAddr1 = await dex.connect(addr1).getMyEthBalance();
-        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(18880);
+        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19160);
 
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
-        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(69);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(49);
         ethBalanceOwner = await dex.connect(owner).getMyEthBalance();
-        expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(21120);
+        expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(20840);
 
         // 0 Market selling ------------------------------------------------- //
         await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 0);
@@ -182,12 +203,12 @@ describe('Dex handling market orders', function () {
         balanceAddr1 = await dex.connect(addr1).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceAddr1)).to.be.equals(21);
         ethBalanceAddr1 = await dex.connect(addr1).getMyEthBalance();
-        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(18880);
+        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(19160);
 
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
-        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(69);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(49);
         ethBalanceOwner = await dex.connect(owner).getMyEthBalance();
-        expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(21120);
+        expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(20840);
 
         // The rest of all Market selling ------------------------------------------------- //
         await dex.connect(addr1).createMarketOrder(Side.BUY, Tokens.LINK, 79);
@@ -195,12 +216,12 @@ describe('Dex handling market orders', function () {
         balanceAddr1 = await dex.connect(addr1).getMyTokenBalance(Tokens.LINK);
         expect(Web3Utils.hexToNumber(balanceAddr1)).to.be.equals(30);
         ethBalanceAddr1 = await dex.connect(addr1).getMyEthBalance();
-        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(16780);
+        expect(Web3Utils.hexToNumber(ethBalanceAddr1)).to.be.equals(18800);
 
         balanceOwner = await dex.connect(owner).getMyTokenBalance(Tokens.LINK);
-        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(60);
+        expect(Web3Utils.hexToNumber(balanceOwner)).to.be.equals(40);
         ethBalanceOwner = await dex.connect(owner).getMyEthBalance();
-        expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(23220);
+        expect(Web3Utils.hexToNumber(ethBalanceOwner)).to.be.equals(21200);
     });
 
 });

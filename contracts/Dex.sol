@@ -16,6 +16,7 @@ contract Dex is Wallet {
         address trader;
         uint256 amount;
         uint256 price;
+        bool filled;
     }
 
     mapping(bytes32 => mapping(uint256 => Order[])) public orderBook;
@@ -25,7 +26,7 @@ contract Dex is Wallet {
     }
 
     function generateNewOrder(uint256 amount, uint256 price) view public returns(Order memory) {
-        return Order(msg.sender, amount, price);
+        return Order(msg.sender, amount, price, false);
     }
 
     function hasSufficientBalanceForLimit(Side side, bytes32 ticker, uint256 amount, uint256 price) view public {
@@ -54,12 +55,17 @@ contract Dex is Wallet {
 
    function createLimitOrder(Side side, bytes32 ticker, uint256 amount, uint256 price) public {
         hasSufficientBalanceForLimit(side, ticker, amount, price);
-        orderBook[ticker][uint(side)].push(Order(msg.sender, amount, price));
+        if (side == Side.BUY) {
+            balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].sub(amount.mul(price));
+        } else {
+            balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(amount);
+        }
+        orderBook[ticker][uint(side)].push(Order(msg.sender, amount, price, false));
     }
 
     function createSortedLimitOrder(Side side, bytes32 ticker, uint256 amount, uint256 price) public {
         hasSufficientBalanceForLimit(side, ticker, amount, price);
-        addNewOrderInSortedPosition(orderBook[ticker][uint(side)], Order(msg.sender, amount, price));
+        addNewOrderInSortedPosition(orderBook[ticker][uint(side)], Order(msg.sender, amount, price, false));
     }
 
     function createMarketOrder(Side side, bytes32 ticker, uint256 amount) public {
@@ -80,47 +86,71 @@ contract Dex is Wallet {
         return balances[msg.sender][ticker];
     }
 
+    function makeTheTransfer(uint side, bytes32 ticker, uint256 tokenAmount, uint256 price, address seller, address buyer) public {
+        balances[seller][ticker] = balances[seller][ticker].sub(tokenAmount);
+        balances[seller][bytes32("ETH")] = balances[seller][bytes32("ETH")].add(tokenAmount.mul(price));
+        balances[buyer][ticker] = balances[buyer][ticker].add(tokenAmount);
+        balances[buyer][bytes32("ETH")] = balances[buyer][bytes32("ETH")].sub(tokenAmount.mul(price));
+    }
+
     function createSellMarketOrder(uint side, bytes32 ticker, uint256 amount) public {
         uint256 amountFilled = amount;
-        for (uint256 i = 0; i < orderBook[ticker][side].length && amountFilled > 0; i++) {
+        bool done = false;
+        bool needsToClean = false;
+        for (uint256 i = 0; i < orderBook[ticker][side].length && amountFilled > 0 && !done; i++) {
             address orderOwner = orderBook[ticker][side][i].trader;
-            if (amountFilled <= orderBook[ticker][side][i].amount) {
-                orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
-                balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(amountFilled);
-                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
-                balances[orderOwner][ticker] = balances[orderOwner][ticker].add(amount);
-                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
-                return;
+            if (amountFilled < orderBook[ticker][side][i].amount) {
+                uint256 ethCost = amountFilled.mul(orderBook[ticker][side][i].price);
+                if (balances[orderOwner][bytes32("ETH")] >= ethCost) {
+                    orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
+                    makeTheTransfer(side, ticker, amountFilled, orderBook[ticker][side][i].price, msg.sender, orderOwner);
+                } 
+                done = true;
             } else {
-                amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
-                balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(orderBook[ticker][side][i].amount);
-                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
-                balances[orderOwner][ticker] = balances[orderOwner][ticker].add(orderBook[ticker][side][i].amount);
-                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
-                delete orderBook[ticker][side][i];
+                uint256 ethCost = orderBook[ticker][side][i].amount.mul(orderBook[ticker][side][i].price);
+                if (balances[orderOwner][bytes32("ETH")] >= ethCost) {
+                    makeTheTransfer(side, ticker, orderBook[ticker][side][i].amount, orderBook[ticker][side][i].price, msg.sender, orderOwner);
+                    amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
+                    orderBook[ticker][side][i].filled = true;
+                    needsToClean = true;
+                } else {
+                    done = true;
+                }
             }
+        }
+        if (needsToClean) {
+            _cleanFilledOrderbooks(ticker, side);
         }
     }
 
     function createBuyMarketOrder(uint side, bytes32 ticker, uint256 amount) public {
         uint256 amountFilled = amount;
-        for (uint256 i = 0; i < orderBook[ticker][side].length && amountFilled > 0; i++) {
+        bool done = false;
+        bool needsToClean = false;
+        for (uint256 i = 0; i < orderBook[ticker][side].length && amountFilled > 0 && !done; i++) {
             address orderOwner = orderBook[ticker][side][i].trader;
-            if (amountFilled <= orderBook[ticker][side][i].amount) {
-                orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
-                balances[msg.sender][ticker] = balances[msg.sender][ticker].add(amountFilled);
-                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
-                balances[orderOwner][ticker] = balances[orderOwner][ticker].sub(amount);
-                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
-                return;
+            if (amountFilled < orderBook[ticker][side][i].amount) {
+                uint256 ethCost = amountFilled.mul(orderBook[ticker][side][i].price);
+                if (balances[orderOwner][bytes32("ETH")] >= ethCost) {
+                    orderBook[ticker][side][i].amount = orderBook[ticker][side][i].amount.sub(amountFilled);
+                    makeTheTransfer(side, ticker, amountFilled, orderBook[ticker][side][i].price, orderOwner, msg.sender);
+                } 
+                done = true;
             } else {
-                amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
-                balances[msg.sender][ticker] = balances[msg.sender][ticker].add(orderBook[ticker][side][i].amount);
-                balances[msg.sender][bytes32("ETH")] = balances[msg.sender][bytes32("ETH")].sub(amountFilled.mul(orderBook[ticker][side][i].price));
-                balances[orderOwner][ticker] = balances[orderOwner][ticker].sub(orderBook[ticker][side][i].amount);
-                balances[orderOwner][bytes32("ETH")] = balances[orderOwner][bytes32("ETH")].add(amountFilled.mul(orderBook[ticker][side][i].price));
-                delete orderBook[ticker][side][i];
+                uint256 ethCost = orderBook[ticker][side][i].amount.mul(orderBook[ticker][side][i].price);
+                if (balances[orderOwner][bytes32("ETH")] >= ethCost) {
+                    makeTheTransfer(side, ticker, orderBook[ticker][side][i].amount, orderBook[ticker][side][i].price, orderOwner, msg.sender);
+                    amountFilled = amountFilled.sub(orderBook[ticker][side][i].amount);
+                    orderBook[ticker][side][i].filled = true;
+                    needsToClean = true;
+                } else {
+                    done = true;
+                }
             }
+
+        }
+        if (needsToClean) {
+            _cleanFilledOrderbooks(ticker, side);
         }
     }
 
@@ -169,6 +199,16 @@ contract Dex is Wallet {
                 orders[i+1] = orders[i];
             }
             orders[position] = newOrder;
+        }
+    }
+
+    function _cleanFilledOrderbooks(bytes32 ticker, uint side) internal {
+        require(orderBook[ticker][side].length > 0);
+        for (uint256 i = 0; i < orderBook[ticker][side].length; i++) {
+            if (orderBook[ticker][side][i].filled) {
+                orderBook[ticker][side][i] = orderBook[ticker][side][orderBook[ticker][side].length -1];
+                orderBook[ticker][side].pop();
+            }
         }
     }
 

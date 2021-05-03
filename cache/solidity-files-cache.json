@@ -650,8 +650,8 @@
       ]
     },
     "/Users/daniel/Workspace/dex-example/contracts/Wallet.sol": {
-      "lastModificationDate": 1619031157866,
-      "contentHash": "11bd55e64ffbdc13545715c0515f6ec8",
+      "lastModificationDate": 1620039138699,
+      "contentHash": "36d8117f9ae63505a5502598e84d6f6d",
       "sourceName": "contracts/Wallet.sol",
       "solcConfig": {
         "version": "0.7.6",
@@ -688,8 +688,8 @@
       ]
     },
     "/Users/daniel/Workspace/dex-example/contracts/Dex.sol": {
-      "lastModificationDate": 1619815809712,
-      "contentHash": "574433e94b75332f87d3cba17b70f7eb",
+      "lastModificationDate": 1620041696455,
+      "contentHash": "edbd8cf1882d8727cc4bcb0a99a702fa",
       "sourceName": "contracts/Dex.sol",
       "solcConfig": {
         "version": "0.7.6",
